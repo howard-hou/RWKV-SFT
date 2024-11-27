@@ -1,6 +1,6 @@
 # RWKV-SFT
 
-This is a simple RWKV SFT code repository.
+This is a simple RWKV-6 SFT code repository.
 
 ## Installation
 
