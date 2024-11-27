@@ -17,6 +17,7 @@ if importlib.util.find_spec('deepspeed'):
 
 # from deepspeed.runtime.fp16.onebit.zoadam import ZeroOneAdam
 from .dataset import IGNORE_INDEX
+from .utils import compress_parameter_names
 
 def __nop(ob):
     return ob
@@ -293,8 +294,10 @@ class RWKV(pl.LightningModule):
         weight_decay_group = [p for p in self.parameters() if len(p.squeeze().shape) >= 2 and p.requires_grad] 
 
         name_of_trainable_params = [n for n, p in self.named_parameters() if p.requires_grad]
-        rank_zero_info(f"Name of trainable parameters in optimizers: {name_of_trainable_params}")
+        compressed_name_of_trainable_params = compress_parameter_names(name_of_trainable_params)
+        rank_zero_info(f"Name of trainable parameters in optimizers: {compressed_name_of_trainable_params}")
         rank_zero_info(f"Number of trainable parameters in optimizers: {len(name_of_trainable_params)}")
+        optim_groups = []
         optim_groups = []
         if zero_weight_decay_group:
             optim_groups += [{"params": zero_weight_decay_group, "weight_decay": 0.0}]
@@ -316,10 +319,11 @@ class RWKV(pl.LightningModule):
             return cfg.get("offload_optimizer") or cfg.get("offload_param")
         return False
 
-    def forward(self, x):
+    def forward(self, idx):
         args = self.args
         # B, T, D = x.size()
         # assert T <= args.ctx_len, "Cannot forward, model ctx_len is exhausted."
+        x = self.emb(idx)
 
         if args.dropout > 0:
             x = self.drop0(x)
@@ -337,7 +341,11 @@ class RWKV(pl.LightningModule):
         return x
     
     def training_step(self, batch, batch_idx):
-        logits, targets = self(batch)
+        '''
+        batch: dict with keys "input_ids", "labels" and "input_text"
+        '''
+        logits = self(batch["input_ids"])
+        targets = batch["labels"]
         shift_logits = logits[..., :-1, :].contiguous()
         shift_labels = targets[..., 1:].contiguous()
         # calculate valid length for each sample

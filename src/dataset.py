@@ -137,7 +137,6 @@ class MyDataset(Dataset):
         data_dict = preprocess(
             conversations,
             self.tokenizer,
-            has_image=('image' in sample),
             ctx_len=args.ctx_len,
             pad_token_id=0)
         return data_dict
