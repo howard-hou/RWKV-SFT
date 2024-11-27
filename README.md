@@ -22,7 +22,7 @@ To use this code, you need to have the following dependencies installed:
 - `--load_model`: Load pre-trained model from the given path.
 - `--data_file`: Path to the data file, which is a llama conversation json file.
 - `--epoch_steps`: Number of steps per epoch, which is a window for logging.
-- `--epoch_count`: Number of epochs to train. epoch_count*epoch_steps = total steps. micro_bsz*total steps = total samples.
+- `--epoch_count`: Number of epochs to train. epoch_count x epoch_steps = total steps. micro_bsz x total steps = total samples.
 - `--micro_bsz`: Micro batch size. mirco_bsz*accumulate_grad_batches = real batch size.
 - `--num_layers_to_freeze`: Number of layers to freeze, starting from the first layer.
 
